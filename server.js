@@ -9,6 +9,8 @@ console.log('Our first server');
 // npm i dotenv
 // - nodemon — I only need to do this once for ALL TIME
 // npm i -g nodemon
+// - cors
+// npm i cors
 
 
 // REQUIRE
@@ -23,10 +25,17 @@ require('dotenv').config();
 // bring in the JSON data:
 let data = require('./pets.json');
 
+// we need CORS to share data with the front end
+const cors = require('cors');
+
+
 // USE
 // once we require something we need to use it.
 // this is 2 steps for express (react did it in one with import)
 const app = express();
+
+// use cors as middleware
+app.use(cors());
 
 // PORT
 // define our port
@@ -63,11 +72,15 @@ app.get('/sayHello', (request, response) => {
 });
 
 app.get('/pet', (request, response) => {
-  // http://localhost:3001/pets?species=dog
-  let userSearchingForSpecies = request.query.species;
-  let dataFromJSON = data.find(pet => pet.species === userSearchingForSpecies)
-  let dataToSend = new Pet(dataFromJSON);
-  response.send(dataToSend);
+  try {
+    // http://localhost:3001/pets?species=dog
+    let userSearchingForSpecies = request.query.species;
+    let dataFromJSON = data.find(pet => pet.species === userSearchingForSpecies)
+    let dataToSend = new Pet(dataFromJSON);
+    response.send(dataToSend);
+  } catch(error) {
+    next(error);
+  }
 });
 
 
@@ -86,6 +99,12 @@ class Pet {
     this.breed = petObject.breed;
   }
 }
+
+// ERRORS
+// Handle any errors
+app.use((error, request, response, next) => {
+  response.status(500).send(error.message);
+});
 
 
 // LISTEN
